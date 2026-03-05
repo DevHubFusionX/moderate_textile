@@ -42,11 +42,11 @@ const Shop = () => {
           <h2 className="text-4xl font-bold text-gray-800 mb-4">Our Premium Collection</h2>
           <div className="w-16 h-1 bg-green-600 mx-auto rounded-full mb-6"></div>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Discover our most popular products trusted by thousands of customers. 
+            Discover our most popular products trusted by thousands of customers.
             Each item is carefully selected for quality, durability, and style.
           </p>
         </div>
-        
+
         {loading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {[...Array(4)].map((_, index) => (
@@ -57,7 +57,7 @@ const Shop = () => {
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
               {products.slice(0, 4).map((product, index) => (
-                <div 
+                <div
                   key={product._id}
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${index * 150}ms` }}
@@ -66,7 +66,7 @@ const Shop = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="text-center mt-16">
               <div className="bg-gray-50 rounded-2xl p-8 max-w-2xl mx-auto">
                 <h3 className="text-2xl font-bold text-gray-800 mb-4">Explore Our Full Catalog</h3>
@@ -81,7 +81,7 @@ const Shop = () => {
             </div>
           </>
         )}
-        
+
         {!loading && products.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No products available at the moment.</p>

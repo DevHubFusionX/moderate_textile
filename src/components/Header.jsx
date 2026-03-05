@@ -11,7 +11,7 @@ const Header = () => {
       <header className="fixed top-0 w-full bg-gradient-to-r from-white via-green-50/30 to-white backdrop-blur-md shadow-lg border-b border-green-100/50 z-50">
         {/* Decorative top line */}
         <div className="h-1 bg-gradient-to-r from-green-400 via-green-600 to-green-400"></div>
-        
+
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             {/* Logo Section with unique styling */}
@@ -21,13 +21,13 @@ const Header = () => {
                 <Logo size="md" className="relative z-10" />
               </div>
               <div className="relative">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-green-800 bg-clip-text text-transparent">
+                <div className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-green-800 bg-clip-text text-transparent">
                   Moderate's Textile
-                </h1>
+                </div>
                 <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-green-400 to-green-600 group-hover:w-full transition-all duration-300"></div>
               </div>
             </Link>
-            
+
             {/* Navigation with unique pill design */}
             <nav className="hidden md:flex items-center bg-white/80 backdrop-blur-sm rounded-full px-6 py-2 shadow-md border border-green-100">
               <div className="flex space-x-1">
@@ -45,7 +45,7 @@ const Header = () => {
                 </Link>
               </div>
             </nav>
-            
+
             {/* Action buttons with creative styling */}
             <div className="flex items-center space-x-3">
               <div className="hidden sm:flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-md border border-green-100">
@@ -58,9 +58,9 @@ const Header = () => {
                   <FaXTwitter size={18} className="relative z-10" />
                 </a>
               </div>
-              
+
               {/* Unique mobile menu button */}
-              <button 
+              <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden relative p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-md border border-green-100 text-gray-700 hover:text-green-700 transition-all duration-300 group"
               >
@@ -72,37 +72,37 @@ const Header = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Unique Mobile Menu with slide animation */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-gradient-to-br from-white via-green-50/30 to-white backdrop-blur-md border-t border-green-200/50 shadow-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-green-600 to-green-400"></div>
             <nav className="px-6 py-6 space-y-2">
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 onClick={() => setMobileMenuOpen(false)}
                 className="group flex items-center space-x-3 p-3 text-gray-700 hover:text-green-700 font-medium transition-all duration-300 rounded-xl hover:bg-green-50/50 relative overflow-hidden"
               >
                 <div className="absolute left-0 top-0 h-full w-1 bg-green-600 scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
                 <span className="relative z-10">Home</span>
               </Link>
-              <Link 
-                to="/products" 
+              <Link
+                to="/products"
                 onClick={() => setMobileMenuOpen(false)}
                 className="group flex items-center space-x-3 p-3 text-gray-700 hover:text-green-700 font-medium transition-all duration-300 rounded-xl hover:bg-green-50/50 relative overflow-hidden"
               >
                 <div className="absolute left-0 top-0 h-full w-1 bg-green-600 scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
                 <span className="relative z-10">Products</span>
               </Link>
-              <Link 
-                to="/combos" 
+              <Link
+                to="/combos"
                 onClick={() => setMobileMenuOpen(false)}
                 className="group flex items-center space-x-3 p-3 text-gray-700 hover:text-green-700 font-medium transition-all duration-300 rounded-xl hover:bg-green-50/50 relative overflow-hidden"
               >
                 <div className="absolute left-0 top-0 h-full w-1 bg-green-600 scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
                 <span className="relative z-10">Combos</span>
               </Link>
-              
+
               <div className="flex justify-center space-x-4 pt-6 mt-6 border-t border-green-200/50">
                 <a href="https://wa.me/2347069257877" className="relative p-3 bg-green-50 text-green-600 hover:text-white transition-all duration-300 rounded-full group">
                   <div className="absolute inset-0 bg-green-600 rounded-full scale-0 group-hover:scale-100 transition-transform"></div>
@@ -117,7 +117,7 @@ const Header = () => {
           </div>
         )}
       </header>
-      
+
       {/* Floating WhatsApp Button */}
       <a href="https://wa.me/2347069257877" className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all z-50 animate-pulse">
         <FaWhatsapp size={24} />

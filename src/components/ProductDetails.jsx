@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaWhatsapp, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { Helmet } from 'react-helmet-async';
 import Button from './ui/Button';
 import { API_ENDPOINTS, apiRequest } from '../utils/api';
 
@@ -71,12 +71,41 @@ const ProductDetails = () => {
     );
   }
 
-  const currentImages = selectedColor?.images || 
-    (product.images && product.images.length > 0 ? product.images : 
-    (product.image ? [product.image] : ['https://via.placeholder.com/400x400?text=No+Image']));
+  const currentImages = selectedColor?.images ||
+    (product.images && product.images.length > 0 ? product.images :
+      (product.image ? [product.image] : ['https://via.placeholder.com/400x400?text=No+Image']));
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
+      <Helmet>
+        <title>{product.name} - Moderate's Textile</title>
+        <meta name="description" content={`Buy ${product.name} at Moderate's Textile. ${product.description?.substring(0, 150) || 'Premium quality fabrics at best prices.'}`} />
+        <meta property="og:title" content={`${product.name} - Moderate's Textile`} />
+        <meta property="og:description" content={product.description?.substring(0, 150)} />
+        <meta property="og:image" content={currentImages[0]} />
+        <link rel="canonical" href={`https://moderates-textile.vercel.app/product/${id}`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.name,
+            "image": currentImages,
+            "description": product.description,
+            "sku": product._id,
+            "brand": {
+              "@type": "Brand",
+              "name": "Moderate's Textile"
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://moderates-textile.vercel.app/product/${id}`,
+              "priceCurrency": "NGN",
+              "price": product.price.replace(/[^0-9]/g, ''),
+              "availability": "https://schema.org/InStock"
+            }
+          })}
+        </script>
+      </Helmet>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <nav className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 lg:mb-8">
           <button onClick={() => navigate('/')} className="hover:text-green-600 transition-colors truncate">Home</button>
@@ -91,13 +120,13 @@ const ProductDetails = () => {
           <div className="space-y-3 sm:space-y-4">
             <div className="relative bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm">
               <div className="relative aspect-square bg-gray-50 rounded-lg sm:rounded-xl overflow-hidden">
-                <img 
-                  src={imageError ? 'https://via.placeholder.com/600x600?text=No+Image' : currentImages[currentImageIndex]} 
+                <img
+                  src={imageError ? 'https://via.placeholder.com/600x600?text=No+Image' : currentImages[currentImageIndex]}
                   alt={product.name}
                   className="w-full h-full object-cover"
                   onError={() => setImageError(true)}
                 />
-                
+
                 {currentImages.length > 1 && (
                   <>
                     <button
@@ -112,7 +141,7 @@ const ProductDetails = () => {
                     >
                       <FaChevronRight size={14} className="sm:w-4 sm:h-4" />
                     </button>
-                    
+
                     <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-black/70 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
                       {currentImageIndex + 1} / {currentImages.length}
                     </div>
@@ -129,9 +158,8 @@ const ProductDetails = () => {
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`aspect-square rounded-md sm:rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
-                        index === currentImageIndex ? 'border-green-500 ring-1 sm:ring-2 ring-green-200' : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`aspect-square rounded-md sm:rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${index === currentImageIndex ? 'border-green-500 ring-1 sm:ring-2 ring-green-200' : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
                       <img src={image} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
                     </button>
@@ -172,11 +200,10 @@ const ProductDetails = () => {
                     <button
                       key={index}
                       onClick={() => handleColorSelect(color)}
-                      className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-center ${
-                        selectedColor?.name === color.name
-                          ? 'border-green-500 bg-green-50 text-green-800 ring-1 sm:ring-2 ring-green-200'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+                      className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-center ${selectedColor?.name === color.name
+                        ? 'border-green-500 bg-green-50 text-green-800 ring-1 sm:ring-2 ring-green-200'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
                     >
                       <div className="font-medium text-sm sm:text-base">{color.name}</div>
                     </button>

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaWhatsapp, FaChevronLeft, FaChevronRight, FaStar } from 'react-icons/fa';
+import { Helmet } from 'react-helmet-async';
 import Button from './ui/Button';
 import { API_ENDPOINTS, apiRequest } from '../utils/api';
 
@@ -12,13 +12,13 @@ const ComboDetails = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const images = combo?.images || (combo?.image ? [combo.image] : []);
-  
+
   const nextImage = () => {
     if (images.length > 0) {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
     }
   };
-  
+
   const prevImage = () => {
     if (images.length > 0) {
       setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
@@ -78,6 +78,35 @@ const ComboDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
+      <Helmet>
+        <title>{combo.name} Combo - Moderate's Textile</title>
+        <meta name="description" content={`Get the ${combo.name} combo at Moderate's Textile. Save ${combo.savings} on this premium collection.`} />
+        <meta property="og:title" content={`${combo.name} Combo - Moderate's Textile`} />
+        <meta property="og:description" content={combo.description?.substring(0, 150)} />
+        <meta property="og:image" content={images[0]} />
+        <link rel="canonical" href={`https://moderates-textile.vercel.app/combo/${id}`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": `${combo.name} Combo`,
+            "image": images,
+            "description": combo.description,
+            "sku": combo._id || combo.id,
+            "brand": {
+              "@type": "Brand",
+              "name": "Moderate's Textile"
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://moderates-textile.vercel.app/combo/${id}`,
+              "priceCurrency": "NGN",
+              "price": combo.comboPrice.replace(/[^0-9]/g, ''),
+              "availability": "https://schema.org/InStock"
+            }
+          })}
+        </script>
+      </Helmet>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <nav className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 lg:mb-8">
           <button onClick={() => navigate('/')} className="hover:text-green-600 transition-colors">Home</button>
@@ -92,12 +121,12 @@ const ComboDetails = () => {
           <div className="space-y-3 sm:space-y-4">
             <div className="relative bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm">
               <div className="relative aspect-square bg-gray-50 rounded-lg sm:rounded-xl overflow-hidden">
-                <img 
-                  src={images[currentImageIndex] || 'https://via.placeholder.com/600x600?text=No+Image'} 
+                <img
+                  src={images[currentImageIndex] || 'https://via.placeholder.com/600x600?text=No+Image'}
                   alt={combo.name}
                   className="w-full h-full object-cover"
                 />
-                
+
                 {images.length > 1 && (
                   <>
                     <button
@@ -112,21 +141,20 @@ const ComboDetails = () => {
                     >
                       <FaChevronRight size={16} />
                     </button>
-                    
+
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
                       {images.map((_, index) => (
                         <button
                           key={index}
                           onClick={() => setCurrentImageIndex(index)}
-                          className={`w-2 h-2 rounded-full transition-all ${
-                            index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
-                          }`}
+                          className={`w-2 h-2 rounded-full transition-all ${index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                            }`}
                         />
                       ))}
                     </div>
                   </>
                 )}
-                
+
                 {combo.popular && (
                   <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
                     <FaStar size={12} />
@@ -135,19 +163,18 @@ const ComboDetails = () => {
                 )}
               </div>
             </div>
-            
+
             {images.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {images.slice(0, 4).map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`aspect-square bg-white rounded-lg p-1 shadow-sm transition-all ${
-                      index === currentImageIndex ? 'ring-2 ring-green-500' : 'hover:shadow-md'
-                    }`}
+                    className={`aspect-square bg-white rounded-lg p-1 shadow-sm transition-all ${index === currentImageIndex ? 'ring-2 ring-green-500' : 'hover:shadow-md'
+                      }`}
                   >
-                    <img 
-                      src={image} 
+                    <img
+                      src={image}
                       alt={`${combo.name} ${index + 1}`}
                       className="w-full h-full object-cover rounded"
                     />
@@ -171,7 +198,7 @@ const ComboDetails = () => {
                 )}
               </div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">{combo.name}</h1>
-              
+
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600">{combo.comboPrice}</span>
@@ -199,8 +226,8 @@ const ComboDetails = () => {
                   {combo.products.map((product, index) => (
                     <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                       <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                        <img 
-                          src={product.image || product.images?.[0] || 'https://via.placeholder.com/100x100'} 
+                        <img
+                          src={product.image || product.images?.[0] || 'https://via.placeholder.com/100x100'}
                           alt={product.name}
                           className="w-full h-full object-cover"
                         />
