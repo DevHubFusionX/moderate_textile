@@ -1,6 +1,5 @@
 import React from 'react';
 import { FaWhatsapp, FaTwitter, FaInstagram } from 'react-icons/fa';
-import logoImg from '../../assets/logo.png';
 
 const Logo = ({ size = 'md', showDetails = false }) => {
   const sizes = {
@@ -11,8 +10,10 @@ const Logo = ({ size = 'md', showDetails = false }) => {
   };
 
   const MonogramIcon = () => (
-    <div className={`${sizes[size].container} rounded-xl overflow-hidden shadow-lg flex items-center justify-center bg-white`}>
-      <img src={logoImg} alt="Moderate's Textile Logo" className="w-full h-full object-contain" />
+    <div className={`${sizes[size].container} bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg text-white`}>
+      <span className={`${sizes[size].monogram} font-bold tracking-wider`}>
+        MT
+      </span>
     </div>
   );
 
