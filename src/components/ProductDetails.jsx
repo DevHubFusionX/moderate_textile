@@ -83,7 +83,7 @@ const ProductDetails = () => {
         <meta property="og:title" content={`${product.name} - Moderate's Textile`} />
         <meta property="og:description" content={product.description?.substring(0, 150)} />
         <meta property="og:image" content={currentImages[0]} />
-        <link rel="canonical" href={`https://moderates-textile.vercel.app/product/${id}`} />
+        <link rel="canonical" href={`https://moderatestextile.com/product/${id}`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org/",
@@ -98,7 +98,7 @@ const ProductDetails = () => {
             },
             "offers": {
               "@type": "Offer",
-              "url": `https://moderates-textile.vercel.app/product/${id}`,
+              "url": `https://moderatestextile.com/product/${id}`,
               "priceCurrency": "NGN",
               "price": product.price.replace(/[^0-9]/g, ''),
               "availability": "https://schema.org/InStock"

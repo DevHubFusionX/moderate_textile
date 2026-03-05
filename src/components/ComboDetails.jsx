@@ -84,7 +84,7 @@ const ComboDetails = () => {
         <meta property="og:title" content={`${combo.name} Combo - Moderate's Textile`} />
         <meta property="og:description" content={combo.description?.substring(0, 150)} />
         <meta property="og:image" content={images[0]} />
-        <link rel="canonical" href={`https://moderates-textile.vercel.app/combo/${id}`} />
+        <link rel="canonical" href={`https://moderatestextile.com/combo/${id}`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org/",
@@ -99,7 +99,7 @@ const ComboDetails = () => {
             },
             "offers": {
               "@type": "Offer",
-              "url": `https://moderates-textile.vercel.app/combo/${id}`,
+              "url": `https://moderatestextile.com/combo/${id}`,
               "priceCurrency": "NGN",
               "price": combo.comboPrice.replace(/[^0-9]/g, ''),
               "availability": "https://schema.org/InStock"
