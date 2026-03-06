@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaWhatsapp, FaChevronLeft, FaChevronRight, FaStar } from 'react-icons/fa';
 import { Helmet } from 'react-helmet-async';
