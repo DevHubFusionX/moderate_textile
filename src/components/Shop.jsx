@@ -49,14 +49,14 @@ const Shop = () => {
 
         {loading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            {[...Array(4)].map((_, index) => (
+            {[...Array(8)].map((_, index) => (
               <ProductSkeleton key={index} />
             ))}
           </div>
         ) : (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-              {products.slice(0, 4).map((product, index) => (
+              {products.slice(0, 8).map((product, index) => (
                 <div
                   key={product._id}
                   className="animate-fade-in-up"
