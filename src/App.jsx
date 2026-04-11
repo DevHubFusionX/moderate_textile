@@ -9,6 +9,7 @@ import ProductDetails from './components/ProductDetails';
 import ComboDetails from './components/ComboDetails';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
+import AnalyticsTracker from './components/AnalyticsTracker';
 import './utils/keepServerAlive';
 
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
 
   return (
     <Router>
+      <AnalyticsTracker />
       <Header />
       <Routes>
         <Route path="/" element={<MainWebsite />} />
