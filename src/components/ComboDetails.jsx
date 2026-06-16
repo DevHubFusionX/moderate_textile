@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaWhatsapp, FaChevronLeft, FaChevronRight, FaStar } from 'react-icons/fa';
 import { Helmet } from 'react-helmet-async';
 import Button from './ui/Button';
-import { API_ENDPOINTS, apiRequest } from '../utils/api';
+import { getComboById, getCombos } from '../utils/api';
 
 const ComboDetails = () => {
   const { id } = useParams();
@@ -33,14 +33,14 @@ const ComboDetails = () => {
   const fetchCombo = async () => {
     try {
       console.log('Fetching combo with ID:', id);
-      const data = await apiRequest(`${API_ENDPOINTS.combos}/${id}`);
+      const data = await getComboById(id);
       console.log('Combo data received:', data);
       setCombo(data);
     } catch (error) {
       console.error('Error fetching combo:', error);
       // If combo not found in database, try to find it in the generated combos
       try {
-        const allCombos = await apiRequest(API_ENDPOINTS.combos);
+        const allCombos = await getCombos();
         const foundCombo = allCombos.find(c => (c._id || c.id) === id);
         if (foundCombo) {
           setCombo(foundCombo);

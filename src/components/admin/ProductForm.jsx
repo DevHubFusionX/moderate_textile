@@ -33,24 +33,7 @@ const ProductForm = ({ product, onSubmit, onCancel, loading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    const submitData = new FormData();
-    submitData.append('name', formData.name);
-    submitData.append('price', formData.price);
-    submitData.append('category', formData.category);
-    submitData.append('description', formData.description);
-    submitData.append('fabricType', formData.fabricType);
-    submitData.append('texture', formData.texture);
-    submitData.append('quality', formData.quality);
-    submitData.append('care', formData.care);
-    
-    if (formData.images && formData.images.length > 0) {
-      formData.images.forEach(image => {
-        submitData.append('images', image);
-      });
-    }
-    
-    onSubmit(submitData);
+    onSubmit(formData);
   };
 
   const handleImageChange = (e) => {

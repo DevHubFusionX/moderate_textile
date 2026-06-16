@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaWhatsapp, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Helmet } from 'react-helmet-async';
 import Button from './ui/Button';
-import { API_ENDPOINTS, apiRequest } from '../utils/api';
+import { getProductById } from '../utils/api';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -20,7 +20,7 @@ const ProductDetails = () => {
 
   const fetchProduct = async () => {
     try {
-      const data = await apiRequest(`${API_ENDPOINTS.products}/${id}`);
+      const data = await getProductById(id);
       setProduct(data);
       if (data.colors?.length > 0) {
         setSelectedColor(data.colors[0]);

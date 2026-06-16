@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ComboCard from './ui/ComboCard';
 import ProductSkeleton from './ProductSkeleton';
 import { cache } from '../utils/cache';
-import { API_ENDPOINTS, apiRequest } from '../utils/api';
+import { getCombos } from '../utils/api';
 
 const AllCombos = () => {
   const [combos, setCombos] = useState([]);
@@ -29,7 +29,7 @@ const AllCombos = () => {
     }
 
     try {
-      const data = await apiRequest(API_ENDPOINTS.combos);
+      const data = await getCombos();
       if (Array.isArray(data)) {
         setCombos(data);
         setFilteredCombos(data);

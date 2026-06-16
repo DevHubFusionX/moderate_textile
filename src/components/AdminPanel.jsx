@@ -11,7 +11,11 @@ import PasswordForm from './admin/PasswordForm';
 import EmailForm from './admin/EmailForm';
 import EmptyState from './admin/EmptyState';
 import { cache } from '../utils/cache';
-import { API_ENDPOINTS } from '../utils/api';
+import { getProducts, getCombos } from '../utils/api';
+import { db, storage, auth } from '../utils/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 
 const AdminPanel = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('products');
@@ -42,54 +46,57 @@ const AdminPanel = ({ onLogout }) => {
     fetchCombos();
   }, []);
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('adminToken');
-    return {
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   const fetchProducts = async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.products);
-      const data = await response.json();
-      setProducts(data);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
+    const data = await getProducts();
+    setProducts(data);
   };
 
   const fetchCombos = async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.combos);
-      const data = await response.json();
-      setCombos(data);
-    } catch (error) {
-      console.error('Error fetching combos:', error);
-    }
+    const data = await getCombos();
+    setCombos(data);
   };
 
-  const handleSubmit = async (formDataToSend) => {
+  const handleSubmit = async (productData) => {
     setLoading(true);
 
     try {
-      const url = editingId 
-        ? `${API_ENDPOINTS.admin.products}/${editingId}`
-        : API_ENDPOINTS.admin.products;
-      const method = editingId ? 'PUT' : 'POST';
+      let imageUrls = [];
       
-      const response = await fetch(url, { 
-        method, 
-        headers: getAuthHeaders(),
-        body: formDataToSend 
-      });
-      
-      if (response.status === 401) {
-        onLogout();
-        return;
+      // Upload new images to Storage if selected
+      if (productData.images && productData.images.length > 0) {
+        const uploadPromises = productData.images.map(async (image) => {
+          const storageRef = ref(storage, `products/${Date.now()}_${image.name}`);
+          await uploadBytes(storageRef, image);
+          return getDownloadURL(storageRef);
+        });
+        imageUrls = await Promise.all(uploadPromises);
+      } else if (editingId) {
+        const existingProduct = products.find(p => p._id === editingId);
+        imageUrls = existingProduct ? (existingProduct.images || [existingProduct.image]) : [];
+      }
+
+      const docData = {
+        name: productData.name,
+        price: productData.price,
+        category: productData.category,
+        description: productData.description || '',
+        fabricType: productData.fabricType || '',
+        texture: productData.texture || '',
+        quality: productData.quality || '',
+        care: productData.care || '',
+        images: imageUrls,
+        image: imageUrls[0] || 'https://via.placeholder.com/400x400?text=No+Image',
+        updatedAt: new Date().toISOString()
+      };
+
+      if (editingId) {
+        const docRef = doc(db, 'products', editingId);
+        await updateDoc(docRef, docData);
+      } else {
+        docData.createdAt = new Date().toISOString();
+        await addDoc(collection(db, 'products'), docData);
       }
       
-      // Clear cache to ensure frontend updates immediately
       cache.clear('products');
       fetchProducts();
       setFormData({ name: '', price: '', category: '', description: '', fabricType: '', texture: '', quality: '', care: '', images: [] });
@@ -97,6 +104,7 @@ const AdminPanel = ({ onLogout }) => {
       setShowAddForm(false);
     } catch (error) {
       console.error('Error saving product:', error);
+      alert('Error saving product: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -122,21 +130,12 @@ const AdminPanel = ({ onLogout }) => {
     if (confirm('Delete this product?')) {
       setDeletingId(id);
       try {
-        const response = await fetch(`${API_ENDPOINTS.admin.products}/${id}`, { 
-          method: 'DELETE',
-          headers: getAuthHeaders()
-        });
-        
-        if (response.status === 401) {
-          onLogout();
-          return;
-        }
-        
-        // Clear cache to ensure frontend updates immediately
+        await deleteDoc(doc(db, 'products', id));
         cache.clear('products');
         fetchProducts();
       } catch (error) {
         console.error('Error deleting product:', error);
+        alert('Error deleting product: ' + error.message);
       } finally {
         setDeletingId(null);
       }
@@ -162,20 +161,12 @@ const AdminPanel = ({ onLogout }) => {
     if (confirm('Delete this combo?')) {
       setDeletingComboId(id);
       try {
-        const response = await fetch(`${API_ENDPOINTS.admin.combos}/${id}`, {
-          method: 'DELETE',
-          headers: getAuthHeaders()
-        });
-        
-        if (response.status === 401) {
-          onLogout();
-          return;
-        }
-        
+        await deleteDoc(doc(db, 'combos', id));
         cache.clear('combos');
         fetchCombos();
       } catch (error) {
         console.error('Error deleting combo:', error);
+        alert('Error deleting combo: ' + error.message);
       } finally {
         setDeletingComboId(null);
       }
@@ -186,40 +177,40 @@ const AdminPanel = ({ onLogout }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', comboFormData.name);
-      formDataToSend.append('description', comboFormData.description);
-      formDataToSend.append('products', JSON.stringify(comboFormData.products));
-      formDataToSend.append('originalPrice', comboFormData.originalPrice);
-      formDataToSend.append('comboPrice', comboFormData.comboPrice);
-      formDataToSend.append('savings', comboFormData.savings);
-      formDataToSend.append('popular', comboFormData.popular);
+      let imageUrls = [];
+
+      // Upload new combo images if selected
       if (comboFormData.images && comboFormData.images.length > 0) {
-        comboFormData.images.forEach((image) => {
-          formDataToSend.append('images', image);
+        const uploadPromises = comboFormData.images.map(async (image) => {
+          const storageRef = ref(storage, `combos/${Date.now()}_${image.name}`);
+          await uploadBytes(storageRef, image);
+          return getDownloadURL(storageRef);
         });
+        imageUrls = await Promise.all(uploadPromises);
+      } else if (editingComboId) {
+        const existingCombo = combos.find(c => c._id === editingComboId);
+        imageUrls = existingCombo ? (existingCombo.images || [existingCombo.image]) : [];
       }
-      
-      const url = editingComboId 
-        ? `${API_ENDPOINTS.admin.combos}/${editingComboId}`
-        : API_ENDPOINTS.admin.combos;
-      const method = editingComboId ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: getAuthHeaders(),
-        body: formDataToSend
-      });
-      
-      if (response.status === 401) {
-        onLogout();
-        return;
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        alert(`Error: ${errorData.message || 'Failed to save combo'}`);
-        return;
+
+      const docData = {
+        name: comboFormData.name,
+        description: comboFormData.description || '',
+        products: comboFormData.products,
+        originalPrice: comboFormData.originalPrice,
+        comboPrice: comboFormData.comboPrice,
+        savings: comboFormData.savings,
+        popular: comboFormData.popular || false,
+        images: imageUrls,
+        image: imageUrls[0] || 'https://via.placeholder.com/400x400?text=No+Image',
+        updatedAt: new Date().toISOString()
+      };
+
+      if (editingComboId) {
+        const docRef = doc(db, 'combos', editingComboId);
+        await updateDoc(docRef, docData);
+      } else {
+        docData.createdAt = new Date().toISOString();
+        await addDoc(collection(db, 'combos'), docData);
       }
       
       cache.clear('combos');
@@ -229,6 +220,7 @@ const AdminPanel = ({ onLogout }) => {
       setShowAddForm(false);
     } catch (error) {
       console.error('Error saving combo:', error);
+      alert('Error saving combo: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -334,21 +326,17 @@ const AdminPanel = ({ onLogout }) => {
               e.preventDefault();
               setEmailLoading(true);
               try {
-                const response = await fetch(API_ENDPOINTS.admin.changeEmail, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                  body: JSON.stringify({ currentPassword: emailData.currentPassword, newEmail: emailData.newEmail })
-                });
-                if (response.ok) {
-                  alert('Email changed successfully');
-                  setShowEmailForm(false);
-                  setEmailData({ currentPassword: '', newEmail: '' });
-                } else {
-                  const data = await response.json();
-                  alert(data.error);
-                }
+                const user = auth.currentUser;
+                if (!user) throw new Error("No authenticated user found.");
+                const credential = EmailAuthProvider.credential(user.email, emailData.currentPassword);
+                await reauthenticateWithCredential(user, credential);
+                await updateEmail(user, emailData.newEmail);
+                alert('Email changed successfully');
+                setShowEmailForm(false);
+                setEmailData({ currentPassword: '', newEmail: '' });
               } catch (error) {
-                alert('Failed to change email');
+                console.error('Error changing email:', error);
+                alert('Failed to change email: ' + error.message);
               } finally {
                 setEmailLoading(false);
               }
@@ -370,21 +358,17 @@ const AdminPanel = ({ onLogout }) => {
               }
               setPasswordLoading(true);
               try {
-                const response = await fetch(API_ENDPOINTS.admin.changePassword, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                  body: JSON.stringify({ currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword })
-                });
-                if (response.ok) {
-                  alert('Password changed successfully');
-                  setShowPasswordForm(false);
-                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                } else {
-                  const data = await response.json();
-                  alert(data.error);
-                }
+                const user = auth.currentUser;
+                if (!user) throw new Error("No authenticated user found.");
+                const credential = EmailAuthProvider.credential(user.email, passwordData.currentPassword);
+                await reauthenticateWithCredential(user, credential);
+                await updatePassword(user, passwordData.newPassword);
+                alert('Password changed successfully');
+                setShowPasswordForm(false);
+                setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
               } catch (error) {
-                alert('Failed to change password');
+                console.error('Error changing password:', error);
+                alert('Failed to change password: ' + error.message);
               } finally {
                 setPasswordLoading(false);
               }

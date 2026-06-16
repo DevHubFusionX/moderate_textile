@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminPanel from './AdminPanel';
-import { API_ENDPOINTS } from '../utils/api';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../utils/firebase';
 
 const AdminDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -9,38 +10,33 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    verifyToken();
-  }, []);
-
-  const verifyToken = async () => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin-login');
-      return;
-    }
-
-    try {
-      const response = await fetch(API_ENDPOINTS.admin.verify, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
         setIsAuthenticated(true);
+        try {
+          const token = await user.getIdToken();
+          localStorage.setItem('adminToken', token);
+        } catch (e) {
+          console.error('Error refreshing token:', e);
+        }
       } else {
         localStorage.removeItem('adminToken');
         navigate('/admin-login');
       }
-    } catch (error) {
-      localStorage.removeItem('adminToken');
-      navigate('/admin-login');
-    } finally {
       setLoading(false);
-    }
-  };
+    });
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    navigate('/');
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('adminToken');
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   if (loading) {

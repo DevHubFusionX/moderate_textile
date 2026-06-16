@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { API_ENDPOINTS } from '../utils/api';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../utils/firebase';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -24,22 +25,19 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const response = await fetch(API_ENDPOINTS.admin.login, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        localStorage.setItem('adminToken', data.token);
-        navigate('/admin-dashboard');
-      } else {
-        setError(data.error || 'Login failed');
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const token = await userCredential.user.getIdToken();
+      localStorage.setItem('adminToken', token);
+      navigate('/admin-dashboard');
+    } catch (err) {
+      console.error('Login error:', err);
+      let errMsg = 'Login failed. Please check your credentials.';
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        errMsg = 'Invalid email or password.';
+      } else if (err.code === 'auth/too-many-requests') {
+        errMsg = 'Too many failed login attempts. Please try again later.';
       }
-    } catch (error) {
-      setError('Connection error. Please try again.');
+      setError(errMsg);
     } finally {
       setLoading(false);
     }

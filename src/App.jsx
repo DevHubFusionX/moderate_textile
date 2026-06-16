@@ -10,7 +10,7 @@ import ComboDetails from './components/ComboDetails';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
 import AnalyticsTracker from './components/AnalyticsTracker';
-import './utils/keepServerAlive';
+// Serverless Architecture - direct Firebase connection
 
 const App = () => {
   const [loading, setLoading] = useState(true);

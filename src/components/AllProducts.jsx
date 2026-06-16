@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ProductCard from './ui/ProductCard';
 import ProductSkeleton from './ProductSkeleton';
 import { cache } from '../utils/cache';
-import { API_ENDPOINTS, apiRequest } from '../utils/api';
+import { getProducts } from '../utils/api';
 
 const AllProducts = React.memo(() => {
   const [products, setProducts] = useState([]);
@@ -31,7 +31,7 @@ const AllProducts = React.memo(() => {
     }
 
     try {
-      const data = await apiRequest(API_ENDPOINTS.products);
+      const data = await getProducts();
       if (Array.isArray(data)) {
         setProducts(data);
         cache.set('products', data);

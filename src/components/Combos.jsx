@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ComboCard from './ui/ComboCard';
 import ProductSkeleton from './ProductSkeleton';
 import { cache } from '../utils/cache';
-import { API_ENDPOINTS, apiRequest } from '../utils/api';
+import { getCombos, getProducts } from '../utils/api';
 
 const Combos = () => {
   const [products, setProducts] = useState([]);
@@ -23,13 +23,13 @@ const Combos = () => {
     }
 
     try {
-      const data = await apiRequest(API_ENDPOINTS.combos);
+      const data = await getCombos();
       setCombos(data);
       cache.set('combos', data);
     } catch (error) {
       console.error('Error fetching combos:', error);
       // Fallback to auto-generated combos
-      const productsData = await apiRequest(API_ENDPOINTS.products);
+      const productsData = await getProducts();
       setProducts(productsData);
       generateCombos(productsData);
     } finally {
