@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaWhatsapp, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaWhatsapp, FaChevronLeft, FaChevronRight, FaExpand } from 'react-icons/fa';
 import { Helmet } from 'react-helmet-async';
 import Button from './ui/Button';
 import { getProductById } from '../utils/api';
+import Footer from './Footer';
+
+// Split Sub-components
+import ImageLightbox from './ImageLightbox';
+import ShareButtons from './ShareButtons';
+import StickyOrderCTA from './StickyOrderCTA';
+import RelatedProducts from './RelatedProducts';
+import RecentlyViewed from './RecentlyViewed';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -13,6 +21,10 @@ const ProductDetails = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  // Ref for the main WhatsApp checkout section to trigger sticky footer on scroll past it
+  const mainOrderSectionRef = useRef(null);
 
   useEffect(() => {
     fetchProduct();
@@ -24,7 +36,11 @@ const ProductDetails = () => {
       setProduct(data);
       if (data.colors?.length > 0) {
         setSelectedColor(data.colors[0]);
+      } else {
+        setSelectedColor(null);
       }
+      setCurrentImageIndex(0);
+      setImageError(false);
     } catch (error) {
       console.error('Error fetching product:', error);
     } finally {
@@ -77,7 +93,7 @@ const ProductDetails = () => {
       (product.image ? [product.image] : ['https://via.placeholder.com/400x400?text=No+Image']));
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gray-50 pt-20 flex flex-col">
       <Helmet>
         <title>{product.name} - Moderate's Textile</title>
         <meta name="description" content={`Buy ${product.name} at Moderate's Textile. ${product.description?.substring(0, 150) || 'Premium quality fabrics at best prices.'}`} />
@@ -107,7 +123,9 @@ const ProductDetails = () => {
           })}
         </script>
       </Helmet>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 flex-grow w-full">
+        {/* Breadcrumb navigation */}
         <nav className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 lg:mb-8">
           <button onClick={() => navigate('/')} className="hover:text-green-600 transition-colors truncate">Home</button>
           <span>/</span>
@@ -119,14 +137,24 @@ const ProductDetails = () => {
         <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 xl:gap-16">
           {/* Image Gallery */}
           <div className="space-y-3 sm:space-y-4">
-            <div className="relative bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm">
+            <div className="relative bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm group">
               <div className="relative aspect-square bg-gray-50 rounded-lg sm:rounded-xl overflow-hidden">
                 <img
                   src={imageError ? 'https://via.placeholder.com/600x600?text=No+Image' : currentImages[currentImageIndex]}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-zoom-in"
                   onError={() => setImageError(true)}
+                  onClick={() => setIsLightboxOpen(true)}
                 />
+
+                {/* Fullscreen Expand Icon indicator */}
+                <button 
+                  onClick={() => setIsLightboxOpen(true)}
+                  className="absolute top-3 left-3 bg-black/60 text-white p-2 rounded-full hover:bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md"
+                  title="Zoom Image"
+                >
+                  <FaExpand size={14} />
+                </button>
 
                 {currentImages.length > 1 && (
                   <>
@@ -186,9 +214,15 @@ const ProductDetails = () => {
                 <span className="text-xs sm:text-sm text-gray-500">In Stock</span>
               </div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">{product.name}</h1>
-              <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+              
+              <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mb-4">
                 <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600">{product.price}</p>
                 <span className="text-sm sm:text-base lg:text-lg text-gray-500">per piece</span>
+              </div>
+
+              {/* Share Buttons Component */}
+              <div className="border-t border-gray-100 pt-4">
+                <ShareButtons productName={product.name} price={product.price} />
               </div>
             </div>
 
@@ -254,28 +288,48 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Order Section */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border-2 border-green-100">
-              <div className="text-center mb-4 sm:mb-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Ready to Order?</h3>
-                <p className="text-gray-600 text-sm sm:text-base">Contact us directly via WhatsApp for instant service</p>
-              </div>
+            {/* Order Section (contains ref for Sticky CTA tracking) */}
+            <div ref={mainOrderSectionRef} className="pt-2">
               <Button
                 variant="whatsapp"
                 size="lg"
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all"
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3.5 sm:py-4 text-base sm:text-lg font-semibold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all"
                 icon={<FaWhatsapp size={20} className="sm:w-6 sm:h-6" />}
                 onClick={handleWhatsAppOrder}
               >
                 Order via WhatsApp
               </Button>
-              <div className="mt-3 sm:mt-4 text-center">
-                <p className="text-xs sm:text-sm text-gray-500">Fast response • Secure payment • Nationwide delivery</p>
-              </div>
             </div>
           </div>
         </div>
+
+        {/* Related Products */}
+        <RelatedProducts currentProductId={product._id} category={product.category} />
+
+        {/* Recently Viewed */}
+        <RecentlyViewed currentProduct={product} />
       </div>
+
+      {/* Footer component (fixes missing footer issue) */}
+      <Footer />
+
+      {/* Sticky Bottom Order Bar on Mobile */}
+      <StickyOrderCTA
+        productName={product.name}
+        price={product.price}
+        selectedColor={selectedColor}
+        targetRef={mainOrderSectionRef}
+      />
+
+      {/* Fullscreen Lightbox component */}
+      {isLightboxOpen && (
+        <ImageLightbox
+          images={currentImages}
+          currentIndex={currentImageIndex}
+          onClose={() => setIsLightboxOpen(false)}
+          onIndexChange={setCurrentImageIndex}
+        />
+      )}
     </div>
   );
 };

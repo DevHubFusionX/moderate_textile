@@ -4,6 +4,7 @@ import { FaWhatsapp, FaChevronLeft, FaChevronRight, FaStar } from 'react-icons/f
 import { Helmet } from 'react-helmet-async';
 import Button from './ui/Button';
 import { getComboById, getCombos } from '../utils/api';
+import Footer from './Footer';
 
 const ComboDetails = () => {
   const { id } = useParams();
@@ -78,7 +79,7 @@ const ComboDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gray-50 pt-20 flex flex-col">
       <Helmet>
         <title>{combo.name} Combo - Moderate's Textile</title>
         <meta name="description" content={`Get the ${combo.name} combo at Moderate's Textile. Save ${combo.savings} on this premium collection.`} />
@@ -108,7 +109,7 @@ const ComboDetails = () => {
           })}
         </script>
       </Helmet>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 flex-grow w-full">
         <nav className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6 lg:mb-8">
           <button onClick={() => navigate('/')} className="hover:text-green-600 transition-colors">Home</button>
           <span>/</span>
@@ -265,6 +266,7 @@ const ComboDetails = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
