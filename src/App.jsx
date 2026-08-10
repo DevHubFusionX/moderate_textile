@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoadingScreen from './components/LoadingScreen';
+import MaintenanceScreen from './components/MaintenanceScreen';
 import Header from './components/Header';
 import MainWebsite from './components/MainWebsite';
 import AllProducts from './components/AllProducts';
@@ -11,6 +12,8 @@ import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
 import AnalyticsTracker from './components/AnalyticsTracker';
 // Serverless Architecture - direct Firebase connection
+
+const IS_MAINTENANCE_MODE = true;
 
 const App = () => {
   const [loading, setLoading] = useState(true);
@@ -25,6 +28,10 @@ const App = () => {
 
   if (loading) {
     return <LoadingScreen />;
+  }
+
+  if (IS_MAINTENANCE_MODE) {
+    return <MaintenanceScreen />;
   }
 
   return (
