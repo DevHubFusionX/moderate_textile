@@ -14,6 +14,13 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+if (!firebaseConfig.apiKey) {
+  console.error(
+    "Missing VITE_FIREBASE_API_KEY in environment variables. " +
+    "If you recently created or edited .env, please restart your Vite dev server (Ctrl+C, then npm run dev)."
+  );
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
