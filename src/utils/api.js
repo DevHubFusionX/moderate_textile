@@ -37,7 +37,7 @@ export const getCombos = async () => {
       const productPromises = productIds.map(async (pId) => {
         try {
           return await getProductById(pId);
-        } catch (e) {
+        } catch {
           return null;
         }
       });
@@ -70,7 +70,7 @@ export const getComboById = async (id) => {
   const productPromises = productIds.map(async (pId) => {
     try {
       return await getProductById(pId);
-    } catch (e) {
+    } catch {
       return null;
     }
   });

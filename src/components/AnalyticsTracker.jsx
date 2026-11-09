@@ -6,11 +6,13 @@ const AnalyticsTracker = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Send pageview with the current path
-    ReactGA.send({ 
-      hitType: 'pageview', 
-      page: location.pathname + location.search 
-    });
+    // Send pageview with the current path if GA is initialized
+    if (ReactGA.isInitialized) {
+      ReactGA.send({ 
+        hitType: 'pageview', 
+        page: location.pathname + location.search 
+      });
+    }
   }, [location]);
 
   return null;

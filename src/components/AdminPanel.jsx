@@ -23,7 +23,6 @@ const AdminPanel = ({ onLogout }) => {
   const [combos, setCombos] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({ name: '', price: '', category: '', description: '', fabricType: '', texture: '', quality: '', care: '', images: [] });
   const [comboFormData, setComboFormData] = useState({ name: '', description: '', products: [], originalPrice: '', comboPrice: '', savings: '', images: [], popular: false });
   const [editingComboId, setEditingComboId] = useState(null);
   const [deletingComboId, setDeletingComboId] = useState(null);
@@ -99,7 +98,6 @@ const AdminPanel = ({ onLogout }) => {
       
       cache.clear('products');
       fetchProducts();
-      setFormData({ name: '', price: '', category: '', description: '', fabricType: '', texture: '', quality: '', care: '', images: [] });
       setEditingId(null);
       setShowAddForm(false);
     } catch (error) {
@@ -111,17 +109,6 @@ const AdminPanel = ({ onLogout }) => {
   };
 
   const handleEdit = (product) => {
-    setFormData({ 
-      name: product.name, 
-      price: product.price, 
-      category: product.category, 
-      description: product.description || '',
-      fabricType: product.fabricType || '',
-      texture: product.texture || '',
-      quality: product.quality || '',
-      care: product.care || '',
-      images: [] 
-    });
     setEditingId(product._id);
     setShowAddForm(true);
   };
@@ -248,13 +235,6 @@ const AdminPanel = ({ onLogout }) => {
       return total + price;
     }, 0);
   };
-
-  const filteredCombos = combos.filter(combo => {
-    const matchesSearch = combo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         combo.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = !filterPopular || combo.popular;
-    return matchesSearch && matchesFilter;
-  });
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -409,7 +389,6 @@ const AdminPanel = ({ onLogout }) => {
             onCancel={() => {
               setShowAddForm(false);
               setEditingId(null);
-              setFormData({ name: '', price: '', category: '', description: '', fabricType: '', texture: '', quality: '', care: '', images: [] });
             }}
             loading={loading}
           />

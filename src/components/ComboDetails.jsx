@@ -28,31 +28,37 @@ const ComboDetails = () => {
   };
 
   useEffect(() => {
-    fetchCombo();
-  }, [id]);
+    let isMounted = true;
 
-  const fetchCombo = async () => {
-    try {
-      console.log('Fetching combo with ID:', id);
-      const data = await getComboById(id);
-      console.log('Combo data received:', data);
-      setCombo(data);
-    } catch (error) {
-      console.error('Error fetching combo:', error);
-      // If combo not found in database, try to find it in the generated combos
+    const fetchCombo = async () => {
       try {
-        const allCombos = await getCombos();
-        const foundCombo = allCombos.find(c => (c._id || c.id) === id);
-        if (foundCombo) {
-          setCombo(foundCombo);
+        console.log('Fetching combo with ID:', id);
+        const data = await getComboById(id);
+        console.log('Combo data received:', data);
+        if (isMounted) setCombo(data);
+      } catch (error) {
+        console.error('Error fetching combo:', error);
+        // If combo not found in database, try to find it in the generated combos
+        try {
+          const allCombos = await getCombos();
+          const foundCombo = allCombos.find(c => (c._id || c.id) === id);
+          if (foundCombo && isMounted) {
+            setCombo(foundCombo);
+          }
+        } catch (fallbackError) {
+          console.error('Fallback fetch failed:', fallbackError);
         }
-      } catch (fallbackError) {
-        console.error('Fallback fetch failed:', fallbackError);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchCombo();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   const handleWhatsAppOrder = () => {
     const message = `Hi, I'm interested in the ${combo.name} combo for ${combo.comboPrice}`;

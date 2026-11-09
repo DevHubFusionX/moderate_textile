@@ -1,0 +1,198 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: products
+    // Document ID: Auto-generated Firestore document ID
+    // Fields:
+    //   - name: string (required, 1-150 chars) - Product display title
+    //   - price: string (required, 1-50 chars) - Formatted price string (e.g. "₦15,000")
+    //   - category: string (required, 1-50 chars) - Product category name
+    //   - description: string (optional, 0-5000 chars) - Product description
+    //   - fabricType: string (optional, 0-100 chars) - Fabric composition
+    //   - texture: string (optional, 0-100 chars) - Texture description
+    //   - quality: string (optional, 0-100 chars) - Quality grade
+    //   - care: string (optional, 0-200 chars) - Care instructions
+    //   - image: string (required, 1-1000 chars) - Primary image URL
+    //   - images: list of strings (required, 0-20 items) - Image URLs array
+    //   - colors: list (optional, 0-20 items) - Available color variants
+    //   - createdAt: string (required on create, ISO 8601 string, immutable)
+    //   - updatedAt: string (required, ISO 8601 string)
+    //
+    // Collection: combos
+    // Document ID: Auto-generated Firestore document ID
+    // Fields:
+    //   - name: string (required, 1-150 chars) - Combo bundle title
+    //   - description: string (optional, 0-5000 chars) - Combo description
+    //   - products: list of strings (required, 0-50 items) - Array of product IDs
+    //   - originalPrice: string (required, 1-50 chars) - Pre-discount price
+    //   - comboPrice: string (required, 1-50 chars) - Discounted bundle price
+    //   - savings: string (required, 1-50 chars) - Savings amount
+    //   - popular: bool (optional) - Highlight badge flag
+    //   - image: string (required, 1-1000 chars) - Primary combo image URL
+    //   - images: list of strings (required, 0-20 items) - Image URLs array
+    //   - createdAt: string (required on create, ISO 8601 string, immutable)
+    //   - updatedAt: string (required, ISO 8601 string)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the request is from an authenticated user (admin)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the user is an authorized admin
+    function isAdmin() {
+      return isAuthenticated();
+    }
+
+    // Validate required fields exist in request.resource.data
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate that document contains only allowed fields
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Validate that immutable fields have not been modified on update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Validate string type and length boundaries
+    function isValidString(val, minLen, maxLen) {
+      return val is string &&
+             val.size() >= minLen &&
+             val.size() <= maxLen;
+    }
+
+    // Validate optional string field
+    function isValidOptionalString(data, field, minLen, maxLen) {
+      return !(field in data) ||
+             (data[field] is string &&
+              data[field].size() >= minLen &&
+              data[field].size() <= maxLen);
+    }
+
+    // Validate URL string format (HTTP/HTTPS or path)
+    function isValidUrl(url) {
+      return url is string &&
+             url.size() > 0 &&
+             url.size() <= 1000 &&
+             (url.matches('^https?://.*') || url.matches('^/.*'));
+    }
+
+    // Validate ISO 8601 date string
+    function isValidDateString(dateStr) {
+      return dateStr is string &&
+             dateStr.size() >= 10 &&
+             dateStr.size() <= 50 &&
+             dateStr.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T.*');
+    }
+
+    // Validate image list size and element sanity
+    function isValidImageList(images, maxCount) {
+      return images is list &&
+             images.size() <= maxCount &&
+             (images.size() == 0 || (images[0] is string && images[0].size() <= 1000));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    // Validate schema for product documents (used for both create and update)
+    function isValidProduct(data) {
+      return hasOnlyAllowedFields([
+               'name', 'price', 'category', 'description', 'fabricType',
+               'texture', 'quality', 'care', 'images', 'image',
+               'createdAt', 'updatedAt', 'colors'
+             ]) &&
+             hasRequiredFields([
+               'name', 'price', 'category', 'image', 'images',
+               'createdAt', 'updatedAt'
+             ]) &&
+             isValidString(data.name, 1, 150) &&
+             isValidString(data.price, 1, 50) &&
+             isValidString(data.category, 1, 50) &&
+             isValidOptionalString(data, 'description', 0, 5000) &&
+             isValidOptionalString(data, 'fabricType', 0, 100) &&
+             isValidOptionalString(data, 'texture', 0, 100) &&
+             isValidOptionalString(data, 'quality', 0, 100) &&
+             isValidOptionalString(data, 'care', 0, 200) &&
+             isValidUrl(data.image) &&
+             isValidImageList(data.images, 20) &&
+             isValidDateString(data.createdAt) &&
+             isValidDateString(data.updatedAt) &&
+             (!('colors' in data) || (data.colors is list && data.colors.size() <= 20));
+    }
+
+    // Validate schema for combo documents (used for both create and update)
+    function isValidCombo(data) {
+      return hasOnlyAllowedFields([
+               'name', 'description', 'products', 'originalPrice',
+               'comboPrice', 'savings', 'popular', 'images',
+               'image', 'createdAt', 'updatedAt'
+             ]) &&
+             hasRequiredFields([
+               'name', 'products', 'originalPrice', 'comboPrice',
+               'savings', 'image', 'images', 'createdAt', 'updatedAt'
+             ]) &&
+             isValidString(data.name, 1, 150) &&
+             isValidOptionalString(data, 'description', 0, 5000) &&
+             data.products is list &&
+             data.products.size() <= 50 &&
+             (data.products.size() == 0 || (data.products[0] is string && data.products[0].size() <= 100)) &&
+             isValidString(data.originalPrice, 1, 50) &&
+             isValidString(data.comboPrice, 1, 50) &&
+             isValidString(data.savings, 1, 50) &&
+             (!('popular' in data) || data.popular is bool) &&
+             isValidUrl(data.image) &&
+             isValidImageList(data.images, 20) &&
+             isValidDateString(data.createdAt) &&
+             isValidDateString(data.updatedAt);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Products collection: publicly readable by store visitors,
+    // writable only by authenticated admin with schema validation.
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidProduct(request.resource.data);
+      allow update: if isAdmin() &&
+                       areImmutableFieldsUnchanged(['createdAt']) &&
+                       isValidProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Combos collection: publicly readable by store visitors,
+    // writable only by authenticated admin with schema validation.
+    match /combos/{comboId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidCombo(request.resource.data);
+      allow update: if isAdmin() &&
+                       areImmutableFieldsUnchanged(['createdAt']) &&
+                       isValidCombo(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Default deny for all other collections and subcollections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

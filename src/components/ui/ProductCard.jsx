@@ -7,7 +7,6 @@ const ProductCard = React.memo(({ product, showActions = false, onEdit, onDelete
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(false);
   
   const images = product.images && product.images.length > 0 
     ? product.images 

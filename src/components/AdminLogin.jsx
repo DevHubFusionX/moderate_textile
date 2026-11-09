@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../utils/firebase';
 
 const AdminLogin = () => {
@@ -12,11 +12,13 @@ const AdminLogin = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Redirect if already logged in
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-      navigate('/admin-dashboard');
-    }
+    // Redirect if already logged in via Firebase Auth
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate('/admin-dashboard');
+      }
+    });
+    return () => unsubscribe();
   }, [navigate]);
 
   const handleSubmit = async (e) => {

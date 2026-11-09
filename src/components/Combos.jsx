@@ -4,109 +4,126 @@ import ProductSkeleton from './ProductSkeleton';
 import { cache } from '../utils/cache';
 import { getCombos, getProducts } from '../utils/api';
 
+const calculateOriginalPrice = (items) => {
+  const total = items.reduce((sum, item) => {
+    if (item?.price) {
+      const price = parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0;
+      return sum + price;
+    }
+    return sum;
+  }, 0);
+  return `₦${total.toLocaleString()}`;
+};
+
+const calculateComboPrice = (items) => {
+  const total = items.reduce((sum, item) => {
+    if (item?.price) {
+      const price = parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0;
+      return sum + price;
+    }
+    return sum;
+  }, 0);
+  const discounted = Math.floor(total * 0.85); // 15% discount
+  return `₦${discounted.toLocaleString()}`;
+};
+
+const calculateSavings = (items) => {
+  const original = items.reduce((sum, item) => {
+    if (item?.price) {
+      const price = parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0;
+      return sum + price;
+    }
+    return sum;
+  }, 0);
+  const savings = Math.floor(original * 0.15); // 15% savings
+  return `₦${savings.toLocaleString()}`;
+};
+
+const generateFallbackCombos = (productList) => {
+  if (productList.length >= 3) {
+    return [
+      {
+        id: 1,
+        name: "Complete Traditional Package",
+        items: `${productList[0]?.name} + ${productList[2]?.name}`,
+        originalPrice: calculateOriginalPrice([productList[0], productList[2]]),
+        comboPrice: calculateComboPrice([productList[0], productList[2]]),
+        savings: calculateSavings([productList[0], productList[2]]),
+        image: productList[0]?.image,
+        popular: true
+      },
+      {
+        id: 2,
+        name: "Premium Combo",
+        items: `${productList[1]?.name} + ${productList[3]?.name}`,
+        originalPrice: calculateOriginalPrice([productList[1], productList[3]]),
+        comboPrice: calculateComboPrice([productList[1], productList[3]]),
+        savings: calculateSavings([productList[1], productList[3]]),
+        image: productList[1]?.image
+      },
+      {
+        id: 3,
+        name: "Casual Special",
+        items: `${productList[4]?.name} + ${productList[2]?.name}`,
+        originalPrice: calculateOriginalPrice([productList[4], productList[2]]),
+        comboPrice: calculateComboPrice([productList[4], productList[2]]),
+        savings: calculateSavings([productList[4], productList[2]]),
+        image: productList[4]?.image
+      }
+    ].filter(combo => combo.image);
+  }
+  return [];
+};
+
 const Combos = () => {
-  const [products, setProducts] = useState([]);
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    let isMounted = true;
 
-  const fetchProducts = async () => {
-    // Check cache first
-    const cachedCombos = cache.get('combos');
-    if (cachedCombos) {
-      setCombos(cachedCombos);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const data = await getCombos();
-      setCombos(data);
-      cache.set('combos', data);
-    } catch (error) {
-      console.error('Error fetching combos:', error);
-      // Fallback to auto-generated combos
-      const productsData = await getProducts();
-      setProducts(productsData);
-      generateCombos(productsData);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateCombos = (productList) => {
-    if (productList.length >= 3) {
-      const generatedCombos = [
-        {
-          id: 1,
-          name: "Complete Traditional Package",
-          items: `${productList[0]?.name} + ${productList[2]?.name}`,
-          originalPrice: calculateOriginalPrice([productList[0], productList[2]]),
-          comboPrice: calculateComboPrice([productList[0], productList[2]]),
-          savings: calculateSavings([productList[0], productList[2]]),
-          image: productList[0]?.image,
-          popular: true
-        },
-        {
-          id: 2,
-          name: "Premium Combo",
-          items: `${productList[1]?.name} + ${productList[3]?.name}`,
-          originalPrice: calculateOriginalPrice([productList[1], productList[3]]),
-          comboPrice: calculateComboPrice([productList[1], productList[3]]),
-          savings: calculateSavings([productList[1], productList[3]]),
-          image: productList[1]?.image
-        },
-        {
-          id: 3,
-          name: "Casual Special",
-          items: `${productList[4]?.name} + ${productList[2]?.name}`,
-          originalPrice: calculateOriginalPrice([productList[4], productList[2]]),
-          comboPrice: calculateComboPrice([productList[4], productList[2]]),
-          savings: calculateSavings([productList[4], productList[2]]),
-          image: productList[4]?.image
+    const fetchCombosData = async () => {
+      // Check cache first
+      const cachedCombos = cache.get('combos');
+      if (cachedCombos) {
+        if (isMounted) {
+          setCombos(cachedCombos);
+          setLoading(false);
         }
-      ].filter(combo => combo.image); // Only show combos with valid products
-      setCombos(generatedCombos);
-    }
-  };
-
-  const calculateOriginalPrice = (items) => {
-    const total = items.reduce((sum, item) => {
-      if (item?.price) {
-        const price = parseInt(item.price.replace(/[^0-9]/g, ''));
-        return sum + price;
+        return;
       }
-      return sum;
-    }, 0);
-    return `₦${total.toLocaleString()}`;
-  };
 
-  const calculateComboPrice = (items) => {
-    const total = items.reduce((sum, item) => {
-      if (item?.price) {
-        const price = parseInt(item.price.replace(/[^0-9]/g, ''));
-        return sum + price;
+      try {
+        const data = await getCombos();
+        if (isMounted) {
+          setCombos(data);
+          cache.set('combos', data);
+        }
+      } catch (error) {
+        console.error('Error fetching combos:', error);
+        // Fallback to auto-generated combos
+        try {
+          const productsData = await getProducts();
+          if (isMounted) {
+            const fallback = generateFallbackCombos(productsData);
+            setCombos(fallback);
+          }
+        } catch (prodError) {
+          console.error('Error fetching fallback products:', prodError);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      return sum;
-    }, 0);
-    const discounted = Math.floor(total * 0.85); // 15% discount
-    return `₦${discounted.toLocaleString()}`;
-  };
+    };
 
-  const calculateSavings = (items) => {
-    const original = items.reduce((sum, item) => {
-      if (item?.price) {
-        const price = parseInt(item.price.replace(/[^0-9]/g, ''));
-        return sum + price;
-      }
-      return sum;
-    }, 0);
-    const savings = Math.floor(original * 0.15); // 15% savings
-    return `₦${savings.toLocaleString()}`;
-  };
+    fetchCombosData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <section id="combos" className="py-20 bg-white">

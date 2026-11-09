@@ -16,6 +16,23 @@ const ImageLightbox = ({ images, currentIndex, onClose, onIndexChange }) => {
     setPosition({ x: 0, y: 0 });
   }, [currentIndex]);
 
+  const handlePrev = useCallback(() => {
+    onIndexChange((currentIndex - 1 + images.length) % images.length);
+  }, [currentIndex, images.length, onIndexChange]);
+
+  const handleNext = useCallback(() => {
+    onIndexChange((currentIndex + 1) % images.length);
+  }, [currentIndex, images.length, onIndexChange]);
+
+  const handleZoomIn = useCallback(() => setZoom((prev) => Math.min(prev + 0.5, 4)), []);
+  const handleZoomOut = useCallback(() => {
+    setZoom((prev) => {
+      const newZoom = Math.max(prev - 0.5, 1);
+      if (newZoom === 1) setPosition({ x: 0, y: 0 });
+      return newZoom;
+    });
+  }, []);
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -48,24 +65,7 @@ const ImageLightbox = ({ images, currentIndex, onClose, onIndexChange }) => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [currentIndex]);
-
-  const handlePrev = useCallback(() => {
-    onIndexChange((currentIndex - 1 + images.length) % images.length);
-  }, [currentIndex, images.length, onIndexChange]);
-
-  const handleNext = useCallback(() => {
-    onIndexChange((currentIndex + 1) % images.length);
-  }, [currentIndex, images.length, onIndexChange]);
-
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.5, 4));
-  const handleZoomOut = () => {
-    setZoom((prev) => {
-      const newZoom = Math.max(prev - 0.5, 1);
-      if (newZoom === 1) setPosition({ x: 0, y: 0 });
-      return newZoom;
-    });
-  };
+  }, [onClose, handlePrev, handleNext, handleZoomIn, handleZoomOut]);
 
   // Scroll to zoom
   const handleWheel = (e) => {

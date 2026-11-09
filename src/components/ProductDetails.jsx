@@ -27,26 +27,36 @@ const ProductDetails = () => {
   const mainOrderSectionRef = useRef(null);
 
   useEffect(() => {
-    fetchProduct();
-  }, [id]);
+    let isMounted = true;
 
-  const fetchProduct = async () => {
-    try {
-      const data = await getProductById(id);
-      setProduct(data);
-      if (data.colors?.length > 0) {
-        setSelectedColor(data.colors[0]);
-      } else {
-        setSelectedColor(null);
+    const fetchProduct = async () => {
+      try {
+        const data = await getProductById(id);
+        if (isMounted) {
+          setProduct(data);
+          if (data.colors?.length > 0) {
+            setSelectedColor(data.colors[0]);
+          } else {
+            setSelectedColor(null);
+          }
+          setCurrentImageIndex(0);
+          setImageError(false);
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      setCurrentImageIndex(0);
-      setImageError(false);
-    } catch (error) {
-      console.error('Error fetching product:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchProduct();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   const nextImage = () => {
     const images = selectedColor?.images || product?.images || [product?.image];

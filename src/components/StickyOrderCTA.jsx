@@ -6,7 +6,8 @@ const StickyOrderCTA = ({ productName, price, selectedColor, targetRef }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (!targetRef.current) return;
+    const target = targetRef.current;
+    if (!target) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -19,12 +20,10 @@ const StickyOrderCTA = ({ productName, price, selectedColor, targetRef }) => {
       }
     );
 
-    observer.observe(targetRef.current);
+    observer.observe(target);
 
     return () => {
-      if (targetRef.current) {
-        observer.unobserve(targetRef.current);
-      }
+      observer.unobserve(target);
     };
   }, [targetRef]);
 

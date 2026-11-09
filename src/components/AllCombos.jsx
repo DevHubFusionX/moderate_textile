@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaTh, FaList, FaStar } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
 import ComboCard from './ui/ComboCard';
 import ProductSkeleton from './ProductSkeleton';
 import { cache } from '../utils/cache';
@@ -13,7 +12,6 @@ const AllCombos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState('grid');
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCombos();
