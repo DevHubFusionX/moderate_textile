@@ -13,55 +13,66 @@ export const cache = {
       }
 
       const { data, timestamp } = parsed;
-      if (!timestamp || Date.now() - timestamp > CACHE_DURATION) {
-        localStorage.removeItem(key);
+        if (
+          !timestamp ||
+          Date.now() - timestamp > CACHE_DURATION ||
+          (Array.isArray(data) && data.length === 0)
+        ) {
+          localStorage.removeItem(key);
+          return null;
+        }
+
+        return data;
+      } catch (error) {
+        console.warn(`Error reading cache for key "${key}":`, error);
         return null;
       }
+    },
 
-      return data;
-    } catch (error) {
-      console.warn(`Error reading cache for key "${key}":`, error);
-      return null;
-    }
-  },
+    set: (key, data) => {
+      try {
+        // Never cache empty results – a failed/blocked fetch would otherwise
+        // leave the shop empty for the whole cache duration.
+        if (data == null || (Array.isArray(data) && data.length === 0)) {
+          localStorage.removeItem(key);
+          return;
+        }
 
-  set: (key, data) => {
-    try {
-      const item = {
-        data,
-        timestamp: Date.now()
-      };
-      localStorage.setItem(key, JSON.stringify(item));
+        const item = {
+          data,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(item));
 
-      // Preload first few product images for faster display
-      if (key === 'products' && Array.isArray(data)) {
-        data.slice(0, 6).forEach(product => {
-          if (product?.images?.[0]) {
-            const img = new Image();
-            img.src = product.images[0];
-          }
-        });
+        // Preload first few product images for faster display
+        if (key === 'products' && Array.isArray(data)) {
+          data.slice(0, 6).forEach(product => {
+            if (product?.images?.[0]) {
+              const img = new Image();
+              img.src = product.images[0];
+            }
+          });
+        }
+      } catch (error) {
+        console.warn(`Error setting cache for key "${key}":`, error);
       }
-    } catch (error) {
-      console.warn(`Error setting cache for key "${key}":`, error);
-    }
-  },
+    },
 
-  clear: (key) => {
-    try {
-      if (key) {
-        localStorage.removeItem(key);
-      } else {
-        // Clear all cache items
-        const keys = Object.keys(localStorage);
-        keys.forEach(k => {
-          if (k === 'products' || k === 'combos') {
-            localStorage.removeItem(k);
+      clear: (key) => {
+        try {
+          if (key) {
+            localStorage.removeItem(key);
+          } else {
+            // Clear all cache items
+            const keys = Object.keys(localStorage);
+            keys.forEach(k => {
+              if (k === 'products' || k === 'combos') {
+                localStorage.removeItem(k);
+              }
+            });
           }
-        });
+        } catch (error) {
+          console.warn(`Error clearing cache for key "${key}":`, error);
+        }
       }
-    } catch (error) {
-      console.warn(`Error clearing cache for key "${key}":`, error);
-    }
-  }
-};
+  };
